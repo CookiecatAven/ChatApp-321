@@ -4,16 +4,27 @@
   "main": "app.js",
   "license": "MIT",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon --ext js,css,html",
-    "prod": "NODE_ENV=production node app.js"
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "prod": "cross-env NODE_ENV=production node dist/app.js"
   },
   "dependencies": {
     "connect-livereload": "^0.6.1",
+    "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "google-auth-library": "^9.15.1",
     "livereload": "^0.9.3",
     "mariadb": "^3.4.0",
-    "nodemon": "^3.1.9",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/connect-livereload": "^0.6.3",
+    "@types/express": "^5.0.1",
+    "@types/livereload": "^0.9.5",
+    "@types/node": "^22.15.17",
+    "cross-env": "^7.0.3",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
   }
 }

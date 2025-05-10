@@ -1,1 +1,8 @@
 node_modules
+
+/.idea/*
+!/.idea/codeStyles
+!/.idea/dataSources.xml
+!/.idea/jsLibraryMappings.xml
+!/.idea/sqldialects.xml
+!/.idea/webResources.xml

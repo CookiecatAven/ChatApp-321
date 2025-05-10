@@ -1,4 +1,6 @@
-let pool = null;
+import {Pool} from 'mariadb';
+
+let pool: Pool | null = null;
 
 /**
  * Initializes the MariaDB connection pool.
@@ -11,10 +13,9 @@ let pool = null;
  * - connectionLimit: The maximum number of connections in the pool. (5)
  * @example
  * initializeMariaDB();
- * @returns {void}
  * @see {@link https://mariadb.com/kb/en/mariadb-connector-nodejs-pooling/}
  */
-const initializeMariaDB = () => {
+export const initializeMariaDB = () => {
   console.log('Initializing MariaDB');
   const mariadb = require('mariadb');
   pool = mariadb.createPool({
@@ -35,18 +36,24 @@ const initializeMariaDB = () => {
  * @example
  * // Select statement without parameters.
  * executeSQL("SELECT * FROM users;");
- * @returns {Promise<Array>} Returns the result of the query.
  */
-const executeSQL = async (query, params) => {
+export const executeSQL = async (query: string, params?: string[]) => {
+  if (!pool) {
+    console.error('Database connection pool is not initialized');
+    return [];
+  }
+
   let conn;
   try {
     conn = await pool.getConnection();
-    const res = await conn.query(query, params);
-    return res;
+    return await conn.query(query, params);
   } catch (err) {
     console.log(err);
+    return [];
   } finally {
-    if (conn) conn.release();
+    if (conn) {
+      await conn.release();
+    }
   }
 };
 
@@ -55,56 +62,29 @@ const executeSQL = async (query, params) => {
  * Creates the tables if they do not exist.
  * Useful for the first time setup.
  */
-const initializeDBSchema = async () => {
+export const initializeDBSchema = async () => {
   console.log('Initializing database schema');
-  const userTableQuery = `CREATE TABLE IF NOT EXISTS users
-  (
-    id
-    INT
-    NOT
-    NULL
-    AUTO_INCREMENT,
-    name
-    VARCHAR
-                          (
-    255
-                          ) NOT NULL,
-    PRIMARY KEY
-                          (
-                            id
-                          )
-    );`;
+  // language=SQL format=false
+  const userTableQuery = `
+    CREATE TABLE IF NOT EXISTS users
+    (
+      id   INT          NOT NULL AUTO_INCREMENT,
+      NAME VARCHAR(255) NOT NULL,
+      PRIMARY KEY (id)
+      );
+  `;
   await executeSQL(userTableQuery);
-  const messageTableQuery = `CREATE TABLE IF NOT EXISTS messages
-  (
-    id
-    INT
-    NOT
-    NULL
-    AUTO_INCREMENT,
-    user_id
-    INT
-    NOT
-    NULL,
-    message
-    VARCHAR
-                             (
-    255
-                             ) NOT NULL,
-    PRIMARY KEY
-                             (
-                               id
-                             ),
-    FOREIGN KEY
-                             (
-                               user_id
-                             ) REFERENCES users
-                             (
-                               id
-                             )
-    );`;
+  // language=SQL format=false
+  const messageTableQuery = `
+    CREATE TABLE IF NOT EXISTS messages
+    (
+      id      INT          NOT NULL AUTO_INCREMENT,
+      user_id INT          NOT NULL,
+      message VARCHAR(255) NOT NULL,
+      PRIMARY KEY (id),
+      FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+  `;
   await executeSQL(messageTableQuery);
   console.log('Database schema initialized');
 };
-
-module.exports = {executeSQL, initializeMariaDB, initializeDBSchema};
