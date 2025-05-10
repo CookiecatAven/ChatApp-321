@@ -1,5 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initializeDBSchema = exports.executeSQL = exports.initializeMariaDB = void 0;
 let pool = null;
-
 /**
  * Initializes the MariaDB connection pool.
  * The connection pool is used to execute SQL queries.
@@ -11,22 +13,21 @@ let pool = null;
  * - connectionLimit: The maximum number of connections in the pool. (5)
  * @example
  * initializeMariaDB();
- * @returns {void}
  * @see {@link https://mariadb.com/kb/en/mariadb-connector-nodejs-pooling/}
  */
 const initializeMariaDB = () => {
-  console.log('Initializing MariaDB');
-  const mariadb = require('mariadb');
-  pool = mariadb.createPool({
-    database: process.env.DB_NAME || 'mychat',
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'mychat',
-    password: process.env.DB_PASSWORD || 'mychatpassword',
-    connectionLimit: 5
-  });
-  console.log('MariaDB initialized');
+    console.log('Initializing MariaDB');
+    const mariadb = require('mariadb');
+    pool = mariadb.createPool({
+        database: process.env.DB_NAME || 'mychat',
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'mychat',
+        password: process.env.DB_PASSWORD || 'mychatpassword',
+        connectionLimit: 5
+    });
+    console.log('MariaDB initialized');
 };
-
+exports.initializeMariaDB = initializeMariaDB;
 /**
  * Allows the execution of SQL queries.
  * @example
@@ -35,33 +36,37 @@ const initializeMariaDB = () => {
  * @example
  * // Select statement without parameters.
  * executeSQL("SELECT * FROM users;");
- * @param {string} query the SQL query
- * @param {string[]} params optional values to replace placeholders in the query
- * @returns {Promise<Array>} Returns the result of the query.
  */
-const executeSQL = async (query, params = []) => {
-  let conn;
-  try {
-    conn = await pool.getConnection();
-    return await conn.query(query, params);
-  } catch (err) {
-    console.log(err);
-  } finally {
-    if (conn) {
-      await conn.release();
+const executeSQL = async (query, params) => {
+    if (!pool) {
+        console.error('Database connection pool is not initialized');
+        return [];
     }
-  }
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        return await conn.query(query, params);
+    }
+    catch (err) {
+        console.log(err);
+        return [];
+    }
+    finally {
+        if (conn) {
+            await conn.release();
+        }
+    }
 };
-
+exports.executeSQL = executeSQL;
 /**
  * Initializes the database schema.
  * Creates the tables if they do not exist.
  * Useful for the first time setup.
  */
 const initializeDBSchema = async () => {
-  console.log('Initializing database schema');
-  // language=SQL format=false
-  const userTableQuery = `
+    console.log('Initializing database schema');
+    // language=SQL format=false
+    const userTableQuery = `
     CREATE TABLE IF NOT EXISTS users
     (
       id   INT          NOT NULL AUTO_INCREMENT,
@@ -69,9 +74,9 @@ const initializeDBSchema = async () => {
       PRIMARY KEY (id)
       );
   `;
-  await executeSQL(userTableQuery);
-  // language=SQL format=false
-  const messageTableQuery = `
+    await (0, exports.executeSQL)(userTableQuery);
+    // language=SQL format=false
+    const messageTableQuery = `
     CREATE TABLE IF NOT EXISTS messages
     (
       id      INT          NOT NULL AUTO_INCREMENT,
@@ -81,8 +86,7 @@ const initializeDBSchema = async () => {
       FOREIGN KEY (user_id) REFERENCES users (id)
       );
   `;
-  await executeSQL(messageTableQuery);
-  console.log('Database schema initialized');
+    await (0, exports.executeSQL)(messageTableQuery);
+    console.log('Database schema initialized');
 };
-
-module.exports = {executeSQL, initializeMariaDB, initializeDBSchema};
+exports.initializeDBSchema = initializeDBSchema;

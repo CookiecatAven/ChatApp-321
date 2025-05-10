@@ -1,15 +1,19 @@
-const WebSocket = require('ws');
+import WebSocket, {RawData} from 'ws';
+import {Server} from 'node:http';
 
-const clients = [];
+interface Client {
+  ws: WebSocket;
+  user: string;
+}
+
+const clients: Client[] = [];
 
 /**
  * Initializes the websocket server.
  * @example
  * initializeWebsocketServer(server);
- * @param {Object} server - The http server object.
- * @returns {void}
  */
-const initializeWebsocketServer = (server) => {
+export const initializeWebsocketServer = (server: Server) => {
   console.log('Initializing websocket server');
   const websocketServer = new WebSocket.Server({server});
   websocketServer.on('connection', onConnection);
@@ -20,10 +24,8 @@ const initializeWebsocketServer = (server) => {
  * Handles a new websocket connection.
  * @example
  * onConnection(ws);
- * @param {Object} ws - The websocket object.
- * @returns {void}
  */
-const onConnection = (ws) => {
+const onConnection = (ws: WebSocket) => {
   console.log('New websocket connection');
   ws.on('message', (message) => onMessage(ws, message));
 };
@@ -33,10 +35,8 @@ const onConnection = (ws) => {
  * Handles a new message from a websocket connection.
  * @example
  * onMessage(ws, messageBuffer);
- * @param {Object} ws - The websocket object.
- * @param {Buffer} messageBuffer - The message buffer. IMPORTANT: Needs to be converted to a string or JSON object first.
  */
-const onMessage = (ws, messageBuffer) => {
+const onMessage = (ws: WebSocket, messageBuffer: RawData) => {
   const messageString = messageBuffer.toString();
   const message = JSON.parse(messageString);
   console.log('Received message: ' + messageString);
@@ -70,10 +70,8 @@ const onMessage = (ws, messageBuffer) => {
  * Handles a websocket disconnect. All other clients are notified about the disconnect.
  * @example
  * onDisconnect(ws);
- * @param {Object} ws - The websocket object.
- * @returns {void}
  */
-const onDisconnect = (ws) => {
+const onDisconnect = (ws: WebSocket) => {
   const index = clients.findIndex((client) => client.ws === ws);
   clients.splice(index, 1);
   const usersMessage = {
@@ -84,5 +82,3 @@ const onDisconnect = (ws) => {
     client.ws.send(JSON.stringify(usersMessage));
   });
 };
-
-module.exports = {initializeWebsocketServer};

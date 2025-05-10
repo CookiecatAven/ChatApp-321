@@ -1,13 +1,12 @@
-const {executeSQL} = require('./database');
+import {executeSQL} from './database';
+import {Express, Request, Response} from 'express';
 
 /**
  * Initializes the API endpoints.
  * @example
  * initializeAPI(app);
- * @param {Object} app - The express app object.
- * @returns {void}
  */
-const initializeAPI = (app) => {
+export const initializeAPI = (app: Express) => {
   console.log('Initializing API');
   // default REST api endpoint
   app.get('/api/users', users);
@@ -18,11 +17,9 @@ const initializeAPI = (app) => {
  * A simple users endpoint that shows the use of the database for insert and select statements.
  * @example
  * users(req, res);
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @returns {void}
  */
-const users = async (req, res) => {
+
+const users = async (_: Request, res: Response) => {
   await executeSQL('INSERT INTO users (name) VALUES (\'John Doe\');');
   const result = await executeSQL('SELECT * FROM users;');
   res.json(result);
