@@ -1,12 +1,21 @@
 import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
+import {UserData, verifyUserToken} from './service/auth';
 
 interface Client {
-  ws: WebSocket;
-  user: string;
+  user: {
+    id: string;
+    name: string;
+    picture?: string;
+  };
 }
 
-const clients: Client[] = [];
+interface Message<T> {
+  type: string;
+  data: T;
+}
+
+const clients = new Map<WebSocket, Client>();
 
 /**
  * Initializes the websocket server.
@@ -36,49 +45,105 @@ const onConnection = (ws: WebSocket) => {
  * @example
  * onMessage(ws, messageBuffer);
  */
-const onMessage = (ws: WebSocket, messageBuffer: RawData) => {
-  const messageString = messageBuffer.toString();
-  const message = JSON.parse(messageString);
-  console.log('Received message: ' + messageString);
+const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
+  const message = JSON.parse(messageBuffer.toString());
+  console.log(`Received message: ${JSON.stringify(message)}`);
   // The message type is checked and the appropriate action is taken
   switch (message.type) {
-    case 'user': {
-      clients.push({ws, user: message.user});
-      const usersMessage = {
-        type: 'users',
-        users: clients.map((client) => client.user)
-      };
-      clients.forEach((client) => {
-        client.ws.send(JSON.stringify(usersMessage));
-      });
-      ws.on('close', () => onDisconnect(ws));
+    case 'auth-request':
+      await handleGoogleAuth(ws, message.data);
       break;
-    }
-    case 'message': {
-      clients.forEach((client) => {
-        client.ws.send(messageString);
+    case 'message':
+      if (!clients.get(ws)) {
+        // client is not in the list of authenticated clients
+        return;
+      }
+      sendToAll({
+        type: 'message',
+        data: {
+          message: message.data
+        }
       });
       break;
-    }
-    default: {
+    case 'sign-out':
+      handleSignOut(ws);
+      break;
+    default:
       console.log('Unknown message type: ' + message.type);
-    }
   }
+};
+
+const handleGoogleAuth = async (ws: WebSocket, userDat: UserData) => {
+  const userVerification = await verifyUserToken(userDat);
+
+  if (!userVerification.success) {
+    ws.send(JSON.stringify({
+      type: 'auth-response',
+      success: false,
+      errorMessage: `Authentication failed: ${userVerification.errorMessage}`
+    }));
+    return;
+  }
+
+  const {payload} = userVerification;
+
+  // Update client data with authenticated user info
+  clients.set(ws, {
+    user: {
+      id: payload.sub,
+      name: payload.name ?? 'Google User',
+      picture: payload.picture
+    }
+  });
+
+  // Send success response
+  ws.send(JSON.stringify({
+    type: 'auth-response',
+    success: true,
+    user: {
+      id: payload.sub,
+      name: payload.name ?? 'Google User',
+      picture: payload.picture
+    }
+  }));
+
+  // register handler for closing socket
+  ws.on('close', () => handleSignOut(ws));
+
+  sendCurrentUsersToAll();
 };
 
 /**
  * Handles a websocket disconnect. All other clients are notified about the disconnect.
  * @example
- * onDisconnect(ws);
+ * handleSignOut(ws);
  */
-const onDisconnect = (ws: WebSocket) => {
-  const index = clients.findIndex((client) => client.ws === ws);
-  clients.splice(index, 1);
+const handleSignOut = (ws: WebSocket) => {
+  clients.delete(ws);
+  sendCurrentUsersToAll();
+};
+
+/**
+ * Sends the current list of users to all connected clients.
+ * @example
+ * sendCurrentUsersToAll();
+ */
+const sendCurrentUsersToAll = () => {
   const usersMessage = {
     type: 'users',
-    users: clients.map((client) => client.user)
+    data: {
+      users: Array.from(clients).map(([_, client]) => client.user)
+    }
   };
-  clients.forEach((client) => {
-    client.ws.send(JSON.stringify(usersMessage));
+  sendToAll(usersMessage);
+};
+
+/**
+ * Sends a message to all connected clients.
+ * It will be serialized into a JSON string before being sent.
+ */
+const sendToAll = (message: Message<any>) => {
+  clients.forEach((_, ws) => {
+    ws.send(JSON.stringify(message));
   });
 };

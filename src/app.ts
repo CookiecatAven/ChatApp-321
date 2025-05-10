@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import express from 'express';
 import http from 'http';
 import path from 'path';
@@ -5,7 +6,9 @@ import livereload from 'livereload';
 import connectLiveReload from 'connect-livereload';
 import {initializeWebsocketServer} from './server/websocket-server';
 import {initializeAPI} from './server/api';
-import {initializeMariaDB, initializeDBSchema} from './server/database';
+import {initializeDBSchema, initializeMariaDB} from './server/database';
+
+dotenv.config();
 
 // Create the express server
 const app = express();

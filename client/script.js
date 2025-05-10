@@ -18,8 +18,8 @@ socket.addEventListener('open', () => {
     user = JSON.parse(savedUser);
     // Send the authenticated user to the backend
     const message = {
-      type: 'user',
-      user
+      type: 'auth-request',
+      data: user
     };
     socket.send(JSON.stringify(message));
     updateUIForAuthenticatedUser();
@@ -103,8 +103,8 @@ function handleCredentialResponse(response) {
 
     // Send the token to your backend for verification
     const message = {
-      type: 'google-auth',
-      user: user
+      type: 'auth-request',
+      data: user
     };
     socket.send(JSON.stringify(message));
   } catch (error) {
