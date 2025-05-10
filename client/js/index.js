@@ -49,6 +49,9 @@ socket.addEventListener('message', (event) => {
       case 'auth-response':
         handleAuthMessage(message);
         break;
+      case 'update-name-response':
+        handleUpdateNameResponse(message);
+        break
       case 'message':
         handleChatMessage(message);
         break;

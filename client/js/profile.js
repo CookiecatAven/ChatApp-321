@@ -24,9 +24,21 @@ function handleUserNameFormSubmit(e) {
   const newName = document.getElementById('user-name-input').value;
   socket.send(JSON.stringify({
     type: 'update-name',
-    data: {name: newName}
+    data: newName
   }));
-  e.target.remove();
+}
+
+function handleUpdateNameResponse(message) {
+  if (!message.success) {
+    console.error(`Failed to update user name: ${message.errorMessage}`);
+    return;
+  }
+  user = {
+    ...user,
+    name: message.data
+  };
+  updateUIForAuthenticatedUser();
+  displayEditUserNameForm(false);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

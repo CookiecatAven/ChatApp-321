@@ -1,7 +1,7 @@
 import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
 import {verifyUserToken} from './service/auth';
-import {getUserById, storeUser} from './service/user';
+import {getUserById, storeUser, updateUserName} from './service/user';
 
 interface Client {
   user: {
@@ -54,6 +54,9 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
     case 'auth-request':
       await handleGoogleAuth(ws, message.data.token);
       break;
+    case 'update-name':
+      await handleUpdateUserName(ws, message.data);
+      break;
     case 'message':
       if (!clients.get(ws)) {
         // client is not in the list of authenticated clients
@@ -70,6 +73,31 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
     default:
       console.log('Unknown message type: ' + message.type);
   }
+};
+
+const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
+  if (!clients.get(ws)) {
+    // client is not in the list of authenticated clients
+    return;
+  }
+  const user = clients.get(ws)?.user;
+  if (!user) {
+    return;
+  }
+  const updatedUser = await updateUserName(user.id, newName);
+  if (!updatedUser) {
+    ws.send(JSON.stringify({
+      type: 'update-name-response',
+      success: false,
+      errorMessage: 'Update failed'
+    }));
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: 'update-name-response',
+    success: true,
+    data: updatedUser.name
+  }));
 };
 
 const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
@@ -135,6 +163,10 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
  * handleSignOut(ws);
  */
 const handleSignOut = (ws: WebSocket) => {
+  if (!clients.get(ws)) {
+    // client is not in the list of authenticated clients
+    return;
+  }
   clients.delete(ws);
   sendCurrentUsersToAll();
 };
