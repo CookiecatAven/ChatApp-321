@@ -115,10 +115,13 @@ function handleCredentialResponse(response) {
 
 // Update UI for authenticated user
 function updateUIForAuthenticatedUser() {
-  // Show sign-out button
-  document.getElementById('sign-out-button').classList.remove('hidden');
-  // Hide Google sign-in button
-  document.getElementById('sign-in-button-background').classList.add('hidden');
+  const userLoggedIn = !!user;
+  document.getElementById('user-info-container').classList.toggle('hidden', !userLoggedIn);
+  document.getElementById('sign-in-button-background').classList.toggle('hidden', userLoggedIn);
+
+  // Update user avatar and name
+  document.getElementById('user-avatar').src = user?.picture ?? '';
+  document.getElementById('user-name').textContent = user?.name ?? '';
 }
 
 function sendMessage(e) {
@@ -141,9 +144,7 @@ function handleSignOut() {
   // Clear authentication state
   user = null;
   localStorage.removeItem('token');
-  // Update UI
-  document.getElementById('sign-out-button').classList.add('hidden');
-  document.getElementById('sign-in-button-background').classList.remove('hidden');
+  updateUIForAuthenticatedUser();
   // Notify server
   socket.send(JSON.stringify({type: 'sign-out'}));
 }

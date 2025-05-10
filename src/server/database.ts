@@ -68,10 +68,11 @@ export const initializeDBSchema = async () => {
   const userTableQuery = `
     CREATE TABLE IF NOT EXISTS users
     (
-      id   INT          NOT NULL AUTO_INCREMENT,
-      NAME VARCHAR(255) NOT NULL,
+      id   VARCHAR(255) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      picture           TEXT,
       PRIMARY KEY (id)
-      );
+    );
   `;
   await executeSQL(userTableQuery);
   // language=SQL format=false
@@ -79,11 +80,12 @@ export const initializeDBSchema = async () => {
     CREATE TABLE IF NOT EXISTS messages
     (
       id      INT          NOT NULL AUTO_INCREMENT,
-      user_id INT          NOT NULL,
+      user_id VARCHAR(255) NOT NULL,
       message VARCHAR(255) NOT NULL,
+      created DATETIME     DEFAULT Current_Timestamp(),
       PRIMARY KEY (id),
       FOREIGN KEY (user_id) REFERENCES users (id)
-      );
+    );
   `;
   await executeSQL(messageTableQuery);
   console.log('Database schema initialized');

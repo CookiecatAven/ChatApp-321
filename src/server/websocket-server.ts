@@ -1,6 +1,7 @@
 import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
-import { verifyUserToken} from './service/auth';
+import {verifyUserToken} from './service/auth';
+import {getUserById, storeUser} from './service/user';
 
 interface Client {
   user: {
@@ -84,13 +85,30 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
   }
 
   const {payload} = userVerification;
+  let existingUser = await getUserById(payload.sub);
+  if (!existingUser) {
+    console.log(`User ${payload.sub} does not exist in database. Creating user.`);
+    existingUser = await storeUser({
+      id: payload.sub,
+      name: payload.name ?? 'Google User',
+      picture: payload.picture
+    });
+    if (!existingUser) {
+      ws.send(JSON.stringify({
+        type: 'auth-response',
+        success: false,
+        errorMessage: 'Sign-Up failed'
+      }));
+      return;
+    }
+  }
 
   // Update client data with authenticated user info
   clients.set(ws, {
     user: {
-      id: payload.sub,
-      name: payload.name ?? 'Google User',
-      picture: payload.picture
+      id: existingUser.id,
+      name: existingUser.name,
+      picture: existingUser.picture
     }
   });
 
@@ -99,9 +117,9 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
     type: 'auth-response',
     success: true,
     user: {
-      id: payload.sub,
-      name: payload.name ?? 'Google User',
-      picture: payload.picture
+      id: existingUser.id,
+      name: existingUser.name ?? 'Google User',
+      picture: existingUser.picture
     }
   }));
 
