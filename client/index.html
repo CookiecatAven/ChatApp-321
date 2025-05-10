@@ -20,13 +20,13 @@
 <div class="flex flex-col w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
 
   <!-- Status bar -->
-  <div class="flex justify-between items-center p-4 border-b border-violet-100">
+  <div class="flex flex-wrap justify-between items-center p-4 border-b border-violet-100">
     <h1 class="text-2xl font-bold text-violet-800 ">My Chat App</h1>
     <div id="user-info-container" class="flex gap-4">
       <div class="text-violet-800 flex items-center gap-2">
         <img id="user-avatar" class="w-8 h-8 rounded-full" src="" alt="User avatar">
         <div id="user-info" class="flex items-center gap-2">
-          <span id="user-name" class="font-medium"></span>
+          <span id="user-name" class="max-w-40 text-nowrap overflow-hidden text-ellipsis"></span>
           <button id="edit-name-button" class="p-1 hover:bg-violet-100 rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                  stroke="currentColor" class="w-4 h-4">

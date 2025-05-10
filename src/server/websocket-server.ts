@@ -75,31 +75,6 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
   }
 };
 
-const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
-  if (!clients.get(ws)) {
-    // client is not in the list of authenticated clients
-    return;
-  }
-  const user = clients.get(ws)?.user;
-  if (!user) {
-    return;
-  }
-  const updatedUser = await updateUserName(user.id, newName);
-  if (!updatedUser) {
-    ws.send(JSON.stringify({
-      type: 'update-name-response',
-      success: false,
-      errorMessage: 'Update failed'
-    }));
-    return;
-  }
-  ws.send(JSON.stringify({
-    type: 'update-name-response',
-    success: true,
-    data: updatedUser.name
-  }));
-};
-
 const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
   const userVerification = await verifyUserToken(userToken);
 
@@ -154,6 +129,35 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
   // register handler for closing socket
   ws.on('close', () => handleSignOut(ws));
 
+  sendCurrentUsersToAll();
+};
+
+const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
+  if (!clients.get(ws)) {
+    // client is not in the list of authenticated clients
+    return;
+  }
+  const user = clients.get(ws)?.user;
+  if (!user) {
+    return;
+  }
+  const updatedUser = await updateUserName(user.id, newName);
+  if (!updatedUser) {
+    ws.send(JSON.stringify({
+      type: 'update-name-response',
+      success: false,
+      errorMessage: 'Update failed'
+    }));
+    return;
+  }
+  clients.set(ws, {
+    user: updatedUser
+  });
+  ws.send(JSON.stringify({
+    type: 'update-name-response',
+    success: true,
+    data: updatedUser.name
+  }));
   sendCurrentUsersToAll();
 };
 
