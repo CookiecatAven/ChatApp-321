@@ -35,18 +35,21 @@ const initializeMariaDB = () => {
  * @example
  * // Select statement without parameters.
  * executeSQL("SELECT * FROM users;");
+ * @param {string} query the SQL query
+ * @param {string[]} params optional values to replace placeholders in the query
  * @returns {Promise<Array>} Returns the result of the query.
  */
-const executeSQL = async (query, params) => {
+const executeSQL = async (query, params = []) => {
   let conn;
   try {
     conn = await pool.getConnection();
-    const res = await conn.query(query, params);
-    return res;
+    return await conn.query(query, params);
   } catch (err) {
     console.log(err);
   } finally {
-    if (conn) conn.release();
+    if (conn) {
+      await conn.release();
+    }
   }
 };
 
@@ -57,52 +60,27 @@ const executeSQL = async (query, params) => {
  */
 const initializeDBSchema = async () => {
   console.log('Initializing database schema');
-  const userTableQuery = `CREATE TABLE IF NOT EXISTS users
-  (
-    id
-    INT
-    NOT
-    NULL
-    AUTO_INCREMENT,
-    name
-    VARCHAR
-                          (
-    255
-                          ) NOT NULL,
-    PRIMARY KEY
-                          (
-                            id
-                          )
-    );`;
+  // language=SQL format=false
+  const userTableQuery = `
+    CREATE TABLE IF NOT EXISTS users
+    (
+      id   INT          NOT NULL AUTO_INCREMENT,
+      NAME VARCHAR(255) NOT NULL,
+      PRIMARY KEY (id)
+      );
+  `;
   await executeSQL(userTableQuery);
-  const messageTableQuery = `CREATE TABLE IF NOT EXISTS messages
-  (
-    id
-    INT
-    NOT
-    NULL
-    AUTO_INCREMENT,
-    user_id
-    INT
-    NOT
-    NULL,
-    message
-    VARCHAR
-                             (
-    255
-                             ) NOT NULL,
-    PRIMARY KEY
-                             (
-                               id
-                             ),
-    FOREIGN KEY
-                             (
-                               user_id
-                             ) REFERENCES users
-                             (
-                               id
-                             )
-    );`;
+  // language=SQL format=false
+  const messageTableQuery = `
+    CREATE TABLE IF NOT EXISTS messages
+    (
+      id      INT          NOT NULL AUTO_INCREMENT,
+      user_id INT          NOT NULL,
+      message VARCHAR(255) NOT NULL,
+      PRIMARY KEY (id),
+      FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+  `;
   await executeSQL(messageTableQuery);
   console.log('Database schema initialized');
 };
