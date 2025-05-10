@@ -93,6 +93,11 @@ function handleChatMessages(chatMessages) {
     messageWrapper.appendChild(messageContainer);
     chatContainer.appendChild(messageWrapper);
   });
+
+  chatContainer.scrollTo({
+    top: chatContainer.scrollHeight,
+    behavior: 'smooth'
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
