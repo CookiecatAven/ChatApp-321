@@ -1,4 +1,8 @@
 import {executeSQL} from '../database';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 interface ChatMessage {
   id: number;
@@ -28,11 +32,12 @@ export async function getAllMessages(): Promise<ChatMessage[]> {
       id: row.id,
       userId: row.user_id.toString(),
       message: row.message,
-      timestamp: new Date(row.timestamp),
+      timestamp: dayjs.utc(row.created).toISOString(),
       userName: row.user_name,
       userPicture: row.user_picture
     }));
   } catch (error) {
+    console.error('Failed to get all messages from database:', error);
     return [];
   }
 }

@@ -23,7 +23,9 @@ export const initializeMariaDB = () => {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'mychat',
     password: process.env.DB_PASSWORD || 'mychatpassword',
-    connectionLimit: 5
+    connectionLimit: 5,
+    timezone: 'UTC',
+    dateStrings: true
   });
   console.log('MariaDB initialized');
 };
@@ -82,7 +84,7 @@ export const initializeDBSchema = async () => {
       id      INT          NOT NULL AUTO_INCREMENT,
       user_id VARCHAR(255) NOT NULL,
       message VARCHAR(255) NOT NULL,
-      created DATETIME     DEFAULT Current_Timestamp(),
+      created TIMESTAMP    DEFAULT CURRENT_TIMESTAMP(),
       PRIMARY KEY (id),
       FOREIGN KEY (user_id) REFERENCES users (id)
     );
