@@ -1,18 +1,29 @@
+// Configuration
+const GOOGLE_CLIENT_ID = '531851416947-lsarlt9ovcaeph4rvamu3hj1ur67m0u5.apps.googleusercontent.com';
+
 // The websocket object is created by the browser and is used to connect to the server.
 // Think about it when the backend is not running on the same server as the frontend
 // replace localhost with the server's IP address or domain name.
 const socket = new WebSocket('ws://localhost:3000');
 
+// Current user information
+let user = null;
+
 // Listen for WebSocket open event
-socket.addEventListener('open', (event) => {
+socket.addEventListener('open', () => {
   console.log('WebSocket connected.');
-  // Send a dummy user to the backend
-  const user = {id: 1, name: 'John Doe'};
-  const message = {
-    type: 'user',
-    user
-  };
-  socket.send(JSON.stringify(message));
+  // Check if we have a saved user in localStorage
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser) {
+    user = JSON.parse(savedUser);
+    // Send the authenticated user to the backend
+    const message = {
+      type: 'user',
+      user
+    };
+    socket.send(JSON.stringify(message));
+    updateUIForAuthenticatedUser();
+  }
 });
 
 const createMessage = (message) => {
@@ -21,14 +32,33 @@ const createMessage = (message) => {
   document.getElementById('messages').appendChild(p);
 };
 
-// Listen for messages from server
+// Listen for messages from the server
 socket.addEventListener('message', (event) => {
   console.log(`Received message: ${event.data}`);
-  createMessage(event.data);
+
+  try {
+    // Try to parse as JSON
+    const data = JSON.parse(event.data);
+
+    // Handle authentication response
+    switch (data.type) {
+      case 'auth-response':
+        handleAuthMessage(data);
+        break;
+      case 'message':
+        handleChatMessage(data);
+        break;
+      default:
+        console.warn(`Unknown message type ${data.type}`);
+    }
+  } catch (e) {
+    // If not JSON, log error
+    console.error(`Could not parse message from server ${event.data}`);
+  }
 });
 
 // Listen for WebSocket close event
-socket.addEventListener('close', (event) => {
+socket.addEventListener('close', () => {
   console.log('WebSocket closed.');
 });
 
@@ -37,7 +67,93 @@ socket.addEventListener('error', (event) => {
   console.error('WebSocket error:', event);
 });
 
+function handleAuthMessage(data) {
+  if (!data.success) {
+    createMessage(`Fehler beim Einloggen: ${data.errorMessage ?? 'Unbekannter Fehler'}`);
+    return;
+  }
+  user = data.user;
+  localStorage.setItem('currentUser', JSON.stringify(user));
+  updateUIForAuthenticatedUser();
+  createMessage('Authentication successful!');
+}
+
+function handleChatMessage(data) {
+  if (!data.message) {
+    console.error(`Message data did not contain message ${JSON.stringify(data)}`);
+    return;
+  }
+  createMessage(data.message);
+}
+
+function handleCredentialResponse(response) {
+  // Decode the JWT token to get user info
+  const token = response.credential;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    user = {
+      id: payload.sub,
+      name: payload.name,
+      email: payload.email,
+      picture: payload.picture,
+      token: token
+    };
+
+    // Send the token to your backend for verification
+    const message = {
+      type: 'google-auth',
+      user: user
+    };
+    socket.send(JSON.stringify(message));
+  } catch (error) {
+    console.error('Failed to parse JWT token:', error);
+  }
+}
+
+// Update UI for authenticated user
+function updateUIForAuthenticatedUser() {
+  // Show sign-out button
+  document.getElementById('signOutButton').classList.remove('hidden');
+  // Hide Google sign-in button
+  document.getElementById('googleSignInButton').classList.add('hidden');
+}
+
+// Handle sign out
+function handleSignOut() {
+  // Clear authentication state
+  user = null;
+  localStorage.removeItem('currentUser');
+  // Update UI
+  document.getElementById('signOutButton').classList.add('hidden');
+  document.getElementById('googleSignInButton').classList.remove('hidden');
+  // Notify server
+  socket.send(JSON.stringify({type: 'sign-out'}));
+  createMessage('Erfolgreich abgemeldet.');
+}
+
+// Initialize Google Sign-In
+function initializeGoogleSignIn() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleCredentialResponse
+  });
+
+  google.accounts.id.renderButton(
+    document.getElementById('googleSignInButton'),
+    {
+      theme: 'outline',
+      size: 'large',
+      text: 'signin_with',
+      shape: 'rectangular'
+    }
+  );
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initializeGoogleSignIn();
+  document.getElementById('signOutButton').addEventListener('click', handleSignOut);
   document.getElementById('btnSendHello').addEventListener('click', () => {
     const message = {
       type: 'message',
