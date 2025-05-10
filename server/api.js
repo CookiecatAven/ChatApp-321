@@ -15,7 +15,7 @@ const initializeAPI = (app) => {
 };
 
 /**
- * A simple users that shows the use of the database for insert and select statements.
+ * A simple users endpoint that shows the use of the database for insert and select statements.
  * @example
  * users(req, res);
  * @param {Object} req - The request object.

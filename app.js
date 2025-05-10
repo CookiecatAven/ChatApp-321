@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const livereload = require('livereload');
 const connectLiveReload = require('connect-livereload');
-const {initializeWebsocketServer} = require('./server/websocketserver');
+const {initializeWebsocketServer} = require('./server/websocket-server');
 const {initializeAPI} = require('./server/api');
 const {initializeMariaDB, initializeDBSchema} = require('./server/database');
 
