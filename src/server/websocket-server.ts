@@ -179,9 +179,9 @@ const handleSignOut = (ws: WebSocket) => {
 const sendCurrentUsersToAll = () => {
   const usersMessage = {
     type: 'users',
-    data: {
-      users: Array.from(clients).map(([_, client]) => client.user)
-    }
+    data: Array.from(clients)
+      .map(([_, client]) => client.user)
+      .sort((a, b) => a.name.localeCompare(b.name))
   };
   sendToAll(usersMessage);
 };
