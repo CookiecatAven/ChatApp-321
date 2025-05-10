@@ -1,6 +1,6 @@
 import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
-import {UserData, verifyUserToken} from './service/auth';
+import { verifyUserToken} from './service/auth';
 
 interface Client {
   user: {
@@ -51,7 +51,7 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
   // The message type is checked and the appropriate action is taken
   switch (message.type) {
     case 'auth-request':
-      await handleGoogleAuth(ws, message.data);
+      await handleGoogleAuth(ws, message.data.token);
       break;
     case 'message':
       if (!clients.get(ws)) {
@@ -73,8 +73,8 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
   }
 };
 
-const handleGoogleAuth = async (ws: WebSocket, userDat: UserData) => {
-  const userVerification = await verifyUserToken(userDat);
+const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
+  const userVerification = await verifyUserToken(userToken);
 
   if (!userVerification.success) {
     ws.send(JSON.stringify({

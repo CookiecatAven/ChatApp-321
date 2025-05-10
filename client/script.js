@@ -6,20 +6,30 @@ const GOOGLE_CLIENT_ID = '531851416947-lsarlt9ovcaeph4rvamu3hj1ur67m0u5.apps.goo
 // replace localhost with the server's IP address or domain name.
 const socket = new WebSocket('ws://localhost:3000');
 
-// Current user information
+/**
+ * Represents the current user of the application.
+ * Can be an instance of the User object if a user is logged in.
+ * Will be null if no user is logged in.
+ * @type {null | {
+ *       id: string,
+ *       picture: string,
+ *       token: string
+ *       }}
+ */
 let user = null;
 
 // Listen for WebSocket open event
 socket.addEventListener('open', () => {
   console.log('WebSocket connected.');
   // Check if we have a saved user in localStorage
-  const savedUser = localStorage.getItem('currentUser');
-  if (savedUser) {
-    user = JSON.parse(savedUser);
+  const token = localStorage.getItem('token');
+  if (token) {
     // Send the authenticated user to the backend
     const message = {
       type: 'auth-request',
-      data: user
+      data: {
+        token
+      }
     };
     socket.send(JSON.stringify(message));
     updateUIForAuthenticatedUser();
@@ -69,11 +79,11 @@ socket.addEventListener('error', (event) => {
 
 function handleAuthMessage(data) {
   if (!data.success) {
-    createMessage(`Fehler beim Einloggen: ${data.errorMessage ?? 'Unbekannter Fehler'}`);
+    createMessage(`Fehler beim Einloggen: ${data.errorMessage ?? 'Unbekannter Fehler'}`)
+    localStorage.removeItem('token');
     return;
   }
   user = data.user;
-  localStorage.setItem('currentUser', JSON.stringify(user));
   updateUIForAuthenticatedUser();
   createMessage('Authentication successful!');
 }
@@ -91,20 +101,13 @@ function handleCredentialResponse(response) {
   const token = response.credential;
 
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-
-    user = {
-      id: payload.sub,
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
-      token: token
-    };
-
+    localStorage.setItem('token', token);
     // Send the token to your backend for verification
     const message = {
       type: 'auth-request',
-      data: user
+      data: {
+        token
+      }
     };
     socket.send(JSON.stringify(message));
   } catch (error) {
@@ -124,7 +127,7 @@ function updateUIForAuthenticatedUser() {
 function handleSignOut() {
   // Clear authentication state
   user = null;
-  localStorage.removeItem('currentUser');
+  localStorage.removeItem('token');
   // Update UI
   document.getElementById('signOutButton').classList.add('hidden');
   document.getElementById('googleSignInButton').classList.remove('hidden');
