@@ -79,13 +79,11 @@ socket.addEventListener('error', (event) => {
 
 function handleAuthMessage(message) {
   if (!message.success) {
-    createMessage(`Fehler beim Einloggen: ${message.errorMessage ?? 'Unbekannter Fehler'}`)
     localStorage.removeItem('token');
     return;
   }
   user = message.user;
   updateUIForAuthenticatedUser();
-  createMessage('Authentication successful!');
 }
 
 function handleChatMessage(message) {
@@ -118,9 +116,9 @@ function handleCredentialResponse(response) {
 // Update UI for authenticated user
 function updateUIForAuthenticatedUser() {
   // Show sign-out button
-  document.getElementById('signOutButton').classList.remove('hidden');
+  document.getElementById('sign-out-button').classList.remove('hidden');
   // Hide Google sign-in button
-  document.getElementById('googleSignInButton').classList.add('hidden');
+  document.getElementById('sign-in-button-background').classList.add('hidden');
 }
 
 // Handle sign out
@@ -129,11 +127,10 @@ function handleSignOut() {
   user = null;
   localStorage.removeItem('token');
   // Update UI
-  document.getElementById('signOutButton').classList.add('hidden');
-  document.getElementById('googleSignInButton').classList.remove('hidden');
+  document.getElementById('sign-out-button').classList.add('hidden');
+  document.getElementById('sign-in-button-background').classList.remove('hidden');
   // Notify server
   socket.send(JSON.stringify({type: 'sign-out'}));
-  createMessage('Erfolgreich abgemeldet.');
 }
 
 // Initialize Google Sign-In
@@ -144,7 +141,7 @@ function initializeGoogleSignIn() {
   });
 
   google.accounts.id.renderButton(
-    document.getElementById('googleSignInButton'),
+    document.getElementById('sign-in-button-container'),
     {
       theme: 'outline',
       size: 'large',
@@ -156,12 +153,16 @@ function initializeGoogleSignIn() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeGoogleSignIn();
-  document.getElementById('signOutButton').addEventListener('click', handleSignOut);
-  document.getElementById('btnSendHello').addEventListener('click', () => {
+  document.getElementById('sign-out-button').addEventListener('click', handleSignOut);
+  const input = document.getElementById('input-message');
+  document.getElementById('message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
     const message = {
       type: 'message',
-      data: 'Hello, server!'
+      data: input.value
     };
+    input.value = '';
     socket.send(JSON.stringify(message));
+    return false;
   });
 });
