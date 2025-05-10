@@ -153,6 +153,11 @@ const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
     data: updatedUser.name
   }));
   sendCurrentUsersToAll();
+  // also resend chat messages
+  sendToAll({
+    type: 'messages',
+    data: await getAllMessages()
+  });
 };
 
 const handleChatMessage = async (ws: WebSocket, message: string) => {
