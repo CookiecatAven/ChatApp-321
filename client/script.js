@@ -121,6 +121,21 @@ function updateUIForAuthenticatedUser() {
   document.getElementById('sign-in-button-background').classList.add('hidden');
 }
 
+function sendMessage(e) {
+  e.preventDefault();
+  const message = {
+    type: 'message',
+    data: document.getElementById('input-message').value
+  };
+  if (!message.data) {
+    return false;
+  }
+  socket.send(JSON.stringify(message));
+  e.target.reset();
+  return false;
+}
+
+
 // Handle sign out
 function handleSignOut() {
   // Clear authentication state
@@ -154,15 +169,5 @@ function initializeGoogleSignIn() {
 document.addEventListener('DOMContentLoaded', () => {
   initializeGoogleSignIn();
   document.getElementById('sign-out-button').addEventListener('click', handleSignOut);
-  const input = document.getElementById('input-message');
-  document.getElementById('message-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const message = {
-      type: 'message',
-      data: input.value
-    };
-    input.value = '';
-    socket.send(JSON.stringify(message));
-    return false;
-  });
+  document.getElementById('message-form').addEventListener('submit', sendMessage);
 });
