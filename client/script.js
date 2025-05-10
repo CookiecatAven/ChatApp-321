@@ -48,18 +48,18 @@ socket.addEventListener('message', (event) => {
 
   try {
     // Try to parse as JSON
-    const data = JSON.parse(event.data);
+    const message = JSON.parse(event.data);
 
     // Handle authentication response
-    switch (data.type) {
+    switch (message.type) {
       case 'auth-response':
-        handleAuthMessage(data);
+        handleAuthMessage(message);
         break;
       case 'message':
-        handleChatMessage(data);
+        handleChatMessage(message);
         break;
       default:
-        console.warn(`Unknown message type ${data.type}`);
+        console.warn(`Unknown message type ${message.type}`);
     }
   } catch (e) {
     // If not JSON, log error
@@ -77,23 +77,23 @@ socket.addEventListener('error', (event) => {
   console.error('WebSocket error:', event);
 });
 
-function handleAuthMessage(data) {
-  if (!data.success) {
-    createMessage(`Fehler beim Einloggen: ${data.errorMessage ?? 'Unbekannter Fehler'}`)
+function handleAuthMessage(message) {
+  if (!message.success) {
+    createMessage(`Fehler beim Einloggen: ${message.errorMessage ?? 'Unbekannter Fehler'}`)
     localStorage.removeItem('token');
     return;
   }
-  user = data.user;
+  user = message.user;
   updateUIForAuthenticatedUser();
   createMessage('Authentication successful!');
 }
 
-function handleChatMessage(data) {
-  if (!data.message) {
-    console.error(`Message data did not contain message ${JSON.stringify(data)}`);
+function handleChatMessage(message) {
+  if (!message.data) {
+    console.error(`Message data did not contain message ${JSON.stringify(message)}`);
     return;
   }
-  createMessage(data.message);
+  createMessage(message.data);
 }
 
 function handleCredentialResponse(response) {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnSendHello').addEventListener('click', () => {
     const message = {
       type: 'message',
-      text: 'Hello, server!'
+      data: 'Hello, server!'
     };
     socket.send(JSON.stringify(message));
   });

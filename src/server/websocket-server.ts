@@ -60,9 +60,7 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
       }
       sendToAll({
         type: 'message',
-        data: {
-          message: message.data
-        }
+        data: message.data
       });
       break;
     case 'sign-out':
