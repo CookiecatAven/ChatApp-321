@@ -117,7 +117,8 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
       id: existingUser.id,
       name: existingUser.name ?? 'Google User',
       picture: existingUser.picture
-    }
+    },
+    messages: await getAllMessages()
   }));
 
   // register handler for closing socket

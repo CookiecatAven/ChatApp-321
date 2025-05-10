@@ -47,7 +47,7 @@ socket.addEventListener('message', (event) => {
     // Handle authentication response
     switch (message.type) {
       case 'auth-response':
-        handleAuthMessage(message);
+        handleAuthResponse(message);
         break;
       case 'update-name-response':
         handleUpdateNameResponse(message);
@@ -56,7 +56,7 @@ socket.addEventListener('message', (event) => {
         handleUsers(message)
         break
       case 'messages':
-        handleChatMessages(message);
+        handleChatMessages(message.data);
         break;
       default:
         console.warn(`Unknown message type ${message.type}`);

@@ -19,20 +19,19 @@ function sendMessage(e) {
 }
 
 /**
- * Handles an incoming chat message by rendering it in the chat interface.
+ * Handles an incoming chat chatMessages by rendering it in the chat interface.
  *
- * @param {Object} message - The message object containing data to process.
- * @param {string} message.data - The actual message content to be displayed.
+ * @param {Array} chatMessages - The chatMessages array containing the chat messages.
  */
-function handleChatMessages(message) {
-  if (!message.data || !Array.isArray(message.data)) {
-    console.error(`Message data did not contain message ${JSON.stringify(message)}`);
+function handleChatMessages(chatMessages) {
+  if (!Array.isArray(chatMessages)) {
+    console.error(`Message data did not contain message ${JSON.stringify(chatMessages)}`);
     return;
   }
 
   const chatContainer = document.getElementById('messages');
   chatContainer.innerHTML = '';
-  message.data.forEach(chatMessage => {
+  chatMessages.forEach(chatMessage => {
     const p = document.createElement('p');
     p.textContent = `${chatMessage.userName}: ${chatMessage.message}`;
     chatContainer.appendChild(p);
