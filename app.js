@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
-var livereload = require('livereload');
-var connectLiveReload = require('connect-livereload');
+const livereload = require('livereload');
+const connectLiveReload = require('connect-livereload');
 const {initializeWebsocketServer} = require('./server/websocketserver');
 const {initializeAPI} = require('./server/api');
 const {initializeMariaDB, initializeDBSchema} = require('./server/database');
@@ -34,10 +34,10 @@ app.get('/', (req, res) => {
 // Initialize the websocket server
 initializeWebsocketServer(server);
 // Initialize the REST api
-initializeAPI(app)
+initializeAPI(app);
 
 // Allowing top-level await
-;(async function () {
+(async function () {
   // Initialize the database
   initializeMariaDB();
   await initializeDBSchema();
