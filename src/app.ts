@@ -5,7 +5,6 @@ import path from 'path';
 import livereload from 'livereload';
 import connectLiveReload from 'connect-livereload';
 import {initializeWebsocketServer} from './server/websocket-server';
-import {initializeAPI} from './server/api';
 import {initializeDBSchema, initializeMariaDB} from './server/database';
 
 dotenv.config();
@@ -39,8 +38,6 @@ app.get('/', (_, res) => {
 });
 // Initialize the websocket server
 initializeWebsocketServer(server);
-// Initialize the REST api
-initializeAPI(app);
 
 // Allowing top-level await
 (async function () {

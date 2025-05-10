@@ -1,6 +1,7 @@
 import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
-import { verifyUserToken} from './service/auth';
+import {verifyUserToken} from './service/auth';
+import {getUserById, storeUser, updateUserName} from './service/user';
 
 interface Client {
   user: {
@@ -53,6 +54,9 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
     case 'auth-request':
       await handleGoogleAuth(ws, message.data.token);
       break;
+    case 'update-name':
+      await handleUpdateUserName(ws, message.data);
+      break;
     case 'message':
       if (!clients.get(ws)) {
         // client is not in the list of authenticated clients
@@ -71,6 +75,31 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
   }
 };
 
+const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
+  if (!clients.get(ws)) {
+    // client is not in the list of authenticated clients
+    return;
+  }
+  const user = clients.get(ws)?.user;
+  if (!user) {
+    return;
+  }
+  const updatedUser = await updateUserName(user.id, newName);
+  if (!updatedUser) {
+    ws.send(JSON.stringify({
+      type: 'update-name-response',
+      success: false,
+      errorMessage: 'Update failed'
+    }));
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: 'update-name-response',
+    success: true,
+    data: updatedUser.name
+  }));
+};
+
 const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
   const userVerification = await verifyUserToken(userToken);
 
@@ -84,13 +113,30 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
   }
 
   const {payload} = userVerification;
+  let existingUser = await getUserById(payload.sub);
+  if (!existingUser) {
+    console.log(`User ${payload.sub} does not exist in database. Creating user.`);
+    existingUser = await storeUser({
+      id: payload.sub,
+      name: payload.name ?? 'Google User',
+      picture: payload.picture
+    });
+    if (!existingUser) {
+      ws.send(JSON.stringify({
+        type: 'auth-response',
+        success: false,
+        errorMessage: 'Sign-Up failed'
+      }));
+      return;
+    }
+  }
 
   // Update client data with authenticated user info
   clients.set(ws, {
     user: {
-      id: payload.sub,
-      name: payload.name ?? 'Google User',
-      picture: payload.picture
+      id: existingUser.id,
+      name: existingUser.name,
+      picture: existingUser.picture
     }
   });
 
@@ -99,9 +145,9 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
     type: 'auth-response',
     success: true,
     user: {
-      id: payload.sub,
-      name: payload.name ?? 'Google User',
-      picture: payload.picture
+      id: existingUser.id,
+      name: existingUser.name ?? 'Google User',
+      picture: existingUser.picture
     }
   }));
 
@@ -117,6 +163,10 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
  * handleSignOut(ws);
  */
 const handleSignOut = (ws: WebSocket) => {
+  if (!clients.get(ws)) {
+    // client is not in the list of authenticated clients
+    return;
+  }
   clients.delete(ws);
   sendCurrentUsersToAll();
 };
