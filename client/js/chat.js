@@ -7,7 +7,7 @@
 function sendMessage(e) {
   e.preventDefault();
   const message = {
-    type: 'message',
+    type: 'chat-message',
     data: document.getElementById('input-message').value
   };
   if (!message.data) {
@@ -24,15 +24,19 @@ function sendMessage(e) {
  * @param {Object} message - The message object containing data to process.
  * @param {string} message.data - The actual message content to be displayed.
  */
-function handleChatMessage(message) {
-  if (!message.data) {
+function handleChatMessages(message) {
+  if (!message.data || !Array.isArray(message.data)) {
     console.error(`Message data did not contain message ${JSON.stringify(message)}`);
     return;
   }
 
-  const p = document.createElement('p');
-  p.textContent = message.data;
-  document.getElementById('messages').appendChild(p);
+  const chatContainer = document.getElementById('messages');
+  chatContainer.innerHTML = '';
+  message.data.forEach(chatMessage => {
+    const p = document.createElement('p');
+    p.textContent = `${chatMessage.userName}: ${chatMessage.message}`;
+    chatContainer.appendChild(p);
+  })
 }
 
 document.addEventListener('DOMContentLoaded', () => {

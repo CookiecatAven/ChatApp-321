@@ -55,8 +55,8 @@ socket.addEventListener('message', (event) => {
       case 'users':
         handleUsers(message)
         break
-      case 'message':
-        handleChatMessage(message);
+      case 'messages':
+        handleChatMessages(message);
         break;
       default:
         console.warn(`Unknown message type ${message.type}`);

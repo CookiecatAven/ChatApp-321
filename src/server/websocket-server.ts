@@ -2,6 +2,7 @@ import WebSocket, {RawData} from 'ws';
 import {Server} from 'node:http';
 import {verifyUserToken} from './service/auth';
 import {getUserById, storeUser, updateUserName} from './service/user';
+import {getAllMessages, writeChatMessageToDB} from './service/chat';
 
 interface Client {
   user: {
@@ -57,15 +58,8 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
     case 'update-name':
       await handleUpdateUserName(ws, message.data);
       break;
-    case 'message':
-      if (!clients.get(ws)) {
-        // client is not in the list of authenticated clients
-        return;
-      }
-      sendToAll({
-        type: 'message',
-        data: message.data
-      });
+    case 'chat-message':
+      await handleChatMessage(ws, message.data);
       break;
     case 'sign-out':
       handleSignOut(ws);
@@ -159,6 +153,19 @@ const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
     data: updatedUser.name
   }));
   sendCurrentUsersToAll();
+};
+
+const handleChatMessage = async (ws: WebSocket, message: string) => {
+  const client = clients.get(ws);
+  if (!client|| !client.user.id || !message) {
+    // client is not in the list of authenticated clients
+    return;
+  }
+  await writeChatMessageToDB(client.user.id, message);
+  sendToAll({
+    type: 'messages',
+    data: await getAllMessages()
+  });
 };
 
 /**
