@@ -140,10 +140,13 @@ function handleChatMessages(chatMessages) {
     chatContainer.appendChild(messageWrapper);
   });
 
-  chatContainer.scrollTo({
-    top: chatContainer.scrollHeight,
-    behavior: 'smooth'
-  });
+  // delay scroll so DOM is rendered
+  setTimeout(() => {
+    chatContainer.parentNode.scrollTo({
+      top: chatContainer.scrollHeight,
+      behavior: 'smooth'
+    });
+  }, 100)
 }
 
 /**
