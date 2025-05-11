@@ -14,7 +14,7 @@ function handleAuthResponse(message) {
   user = message.user;
   updateUIForAuthenticatedUser();
   // update messages
-  handleChatMessages(message.messages)
+  handleChatMessages(message.messages);
 }
 
 /**
@@ -48,20 +48,22 @@ function handleCredentialResponse(response) {
  * with specified settings in the designated HTML container.
  */
 function initializeGoogleSignIn() {
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleCredentialResponse
-  });
+  loadConfig().then(() => {
+    google.accounts.id.initialize({
+      client_id: config.GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse
+    });
 
-  google.accounts.id.renderButton(
-    document.getElementById('sign-in-button-container'),
-    {
-      theme: 'outline',
-      size: 'large',
-      text: 'signin_with',
-      shape: 'rectangular'
-    }
-  );
+    google.accounts.id.renderButton(
+      document.getElementById('sign-in-button-container'),
+      {
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'rectangular'
+      }
+    );
+  });
 }
 
 /**
