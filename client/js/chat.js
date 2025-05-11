@@ -21,6 +21,11 @@ function sendMessage(e) {
 let typingInterval = undefined;
 let hasBeenTyping = false;
 
+/**
+ * Handles the input event for the message input field. Tracks typing status and sends updates about it.
+ *
+ * @param {Event} e - The input event triggered by the message input field.
+ */
 function handleMessageInput(e) {
   const message = e.target.value;
   if (message.length <= 0) {
