@@ -3,28 +3,25 @@
 ## Prerequisites
 
 - Docker
-- Node >= 20.x
+- Node >= 20.x (for development only)
 
-## Get Started
+## Run the complete Application as Docker Containers locally
 
-```bash
-npm install
-docker compose up -d # For the mariaDB
-npm run dev # For development
-npm run prod # For Production or Docker Init Command
-```
+`docker compose --profile manual up -d`
 
-Then acces the frontend at http://localhost:3000
+## Get Started for Development
+
+- `npm install`
+- `docker compose up -d` for the mariaDB
+- `npm run dev` for running the dev environment
+
+Then access the frontend at http://localhost:3000
 
 ## Get Started MariaDB
 
 https://mariadb.com/kb/en/getting-started-with-the-nodejs-connector/
 
-```bash
-docker exec -it mariadb bash
-mysql -u root -p
-```
+- `docker exec -it mariadb bash`
+- `mysql -u root -p`
 
-OR
-
-- Go to PHPMyAdmin: http://localhost:9200
+OR access PHPMyAdmin under http://localhost:9200
