@@ -1,6 +1,6 @@
 services:
   chat-app:
-    image: jennyaven/m321-chat-app:1.0.1
+    image: jennyaven/m321-chat-app:latest
     environment:
       DB_HOST: mariadb
       DB_NAME: mychat
