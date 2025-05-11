@@ -64,6 +64,24 @@ function sendTypingStatus(isTyping) {
   socket.send(JSON.stringify(message));
 }
 
+function handleTypingStatus(message) {
+  if (!Array.isArray(message.data)) {
+    console.error(`Message data did not contain typing status array ${JSON.stringify(message)}`);
+    return;
+  }
+  console.log(`users typing: ${message.data.filter(user => user.isTyping).map(user => user.name).join(', ')}`);
+  const typingUsers = message.data
+    .filter(typingUser => typingUser.isTyping && typingUser.id !== user.id)
+    .map(user => user.name);
+  const typingStatusContainer = document.getElementById('typing-status');
+  typingStatusContainer.innerHTML = `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...`;
+  typingStatusContainer.classList.toggle('hidden', typingUsers.length <= 0);
+  // scroll if the container was displayed
+  if (typingUsers.length > 0) {
+    scrollToBottom()
+  }
+}
+
 /**
  * Handles an incoming chat chatMessages by rendering it in the chat interface.
  *
