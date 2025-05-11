@@ -4,14 +4,17 @@
  * @param {Object} message - The authentication message object.
  * @param {boolean} message.success - Indicates whether the authentication was successful.
  * @param {Object} [message.user] - The user object, provided if authentication is successful.
+ * @param {Array} [message.messages] - The user object, provided if authentication is successful.
  */
-function handleAuthMessage(message) {
+function handleAuthResponse(message) {
   if (!message.success) {
     localStorage.removeItem('token');
     return;
   }
   user = message.user;
   updateUIForAuthenticatedUser();
+  // update messages
+  handleChatMessages(message.messages)
 }
 
 /**
