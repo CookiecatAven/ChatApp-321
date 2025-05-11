@@ -26,24 +26,37 @@ function handleMessageInput(e) {
   if (message.length <= 0) {
     clearInterval(typingInterval);
     typingInterval = undefined;
-    console.log('stopped typing');
+    sendTypingStatus(false);
     return;
   }
   if (typingInterval) {
     hasBeenTyping = true;
     return;
   }
-  console.log('started typing');
+  sendTypingStatus(true);
   typingInterval = setInterval(() => {
     if (!hasBeenTyping) {
       clearInterval(typingInterval);
       typingInterval = undefined;
-      console.log('stopped typing');
+      sendTypingStatus(false);
       return;
     }
     hasBeenTyping = false;
-    console.log('started typing');
+    sendTypingStatus(true);
   }, 2500);
+}
+
+/**
+ * Sends a typing status message to the server indicating whether the user is currently typing.
+ *
+ * @param {boolean} isTyping - Whether the user is typing
+ */
+function sendTypingStatus(isTyping) {
+  const message = {
+    type: 'typing-status',
+    data: isTyping
+  };
+  socket.send(JSON.stringify(message));
 }
 
 /**
