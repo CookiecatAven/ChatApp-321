@@ -15,6 +15,7 @@ function sendMessage(e) {
   }
   socket.send(JSON.stringify(message));
   e.target.reset();
+  sendTypingStatus(false);
   return false;
 }
 
