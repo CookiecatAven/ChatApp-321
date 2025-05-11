@@ -1,4 +1,17 @@
 services:
+  chat-app:
+    image: jennyaven/m321-chat-app:1.0.1
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: mychat
+      DB_USER: mychat
+      DP_PASSWORD: mychatpassword
+      NODE_ENV: production
+      HOST: "localhost:3000"
+      GOOGLE_CLIENT_ID: "531851416947-lsarlt9ovcaeph4rvamu3hj1ur67m0u5.apps.googleusercontent.com"
+    ports:
+      - "3000:3000"
+
   mariadb:
     image: mariadb:lts-ubi
     volumes:
@@ -9,20 +22,6 @@ services:
       - MYSQL_DATABASE=mychat
       - MYSQL_USER=mychat
       - MYSQL_PASSWORD=mychatpassword
-    ports:
-      - 3306:3306
-
-  phpmyadmin:
-    image: phpmyadmin
-    depends_on:
-      - mariadb
-    restart: always
-    environment:
-      - PMA_HOST=mariadb
-      - PMA_PORT=3306
-      - MYSQL_ROOT_PASSWORD=supersecret123
-    ports:
-      - 9200:80
 
 volumes:
   m321_project_mariadb:

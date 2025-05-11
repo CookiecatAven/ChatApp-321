@@ -1,10 +1,14 @@
-const express = require('express');
-const http = require('http');
-var livereload = require('livereload');
-var connectLiveReload = require('connect-livereload');
-const {initializeWebsocketServer} = require('./server/websocketserver');
-const {initializeAPI} = require('./server/api');
-const {initializeMariaDB, initializeDBSchema} = require('./server/database');
+import * as dotenv from 'dotenv';
+import express from 'express';
+import http from 'http';
+import path from 'path';
+import livereload from 'livereload';
+import connectLiveReload from 'connect-livereload';
+import {initializeWebsocketServer} from './server/websocket-server';
+import {initializeAPI} from './server/api';
+import {initializeDBSchema, initializeMariaDB} from './server/database';
+
+dotenv.config();
 
 // Create the express server
 const app = express();
@@ -15,6 +19,7 @@ const server = http.createServer(app);
 // by set the NODE_ENV to production
 const env = process.env.NODE_ENV || 'development';
 if (env !== 'production') {
+  console.log('Starting livereload server');
   const liveReloadServer = livereload.createServer();
   liveReloadServer.server.once('connection', () => {
     setTimeout(() => {
@@ -26,18 +31,19 @@ if (env !== 'production') {
 }
 
 // deliver static files from the client folder like css, js, images
-app.use(express.static('client'));
+
+app.use(express.static(path.join(process.cwd(), 'client')));
 // route for the homepage
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/client/index.html');
+app.get('/', (_, res) => {
+  res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
 });
 // Initialize the websocket server
 initializeWebsocketServer(server);
 // Initialize the REST api
-initializeAPI(app)
+initializeAPI(app);
 
 // Allowing top-level await
-;(async function () {
+(async function () {
   // Initialize the database
   initializeMariaDB();
   await initializeDBSchema();
