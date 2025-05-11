@@ -15,7 +15,72 @@ function sendMessage(e) {
   }
   socket.send(JSON.stringify(message));
   e.target.reset();
+  sendTypingStatus(false);
   return false;
+}
+
+let typingInterval = undefined;
+let hasBeenTyping = false;
+
+/**
+ * Handles the input event for the message input field. Tracks typing status and sends updates about it.
+ *
+ * @param {Event} e - The input event triggered by the message input field.
+ */
+function handleMessageInput(e) {
+  const message = e.target.value;
+  if (message.length <= 0) {
+    clearInterval(typingInterval);
+    typingInterval = undefined;
+    sendTypingStatus(false);
+    return;
+  }
+  if (typingInterval) {
+    hasBeenTyping = true;
+    return;
+  }
+  sendTypingStatus(true);
+  typingInterval = setInterval(() => {
+    if (!hasBeenTyping) {
+      clearInterval(typingInterval);
+      typingInterval = undefined;
+      sendTypingStatus(false);
+      return;
+    }
+    hasBeenTyping = false;
+    sendTypingStatus(true);
+  }, 3000);
+}
+
+/**
+ * Sends a typing status message to the server indicating whether the user is currently typing.
+ *
+ * @param {boolean} isTyping - Whether the user is typing
+ */
+function sendTypingStatus(isTyping) {
+  const message = {
+    type: 'typing-status',
+    data: isTyping
+  };
+  socket.send(JSON.stringify(message));
+}
+
+function handleTypingStatus(message) {
+  if (!Array.isArray(message.data)) {
+    console.error(`Message data did not contain typing status array ${JSON.stringify(message)}`);
+    return;
+  }
+  console.log(`users typing: ${message.data.filter(user => user.isTyping).map(user => user.name).join(', ')}`);
+  const typingUsers = message.data
+    .filter(typingUser => typingUser.isTyping && typingUser.id !== user.id)
+    .map(user => user.name);
+  const typingStatusContainer = document.getElementById('typing-status');
+  typingStatusContainer.innerHTML = `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...`;
+  typingStatusContainer.classList.toggle('hidden', typingUsers.length <= 0);
+  // scroll if the container was displayed
+  if (typingUsers.length > 0) {
+    scrollToBottom()
+  }
 }
 
 /**
@@ -93,16 +158,38 @@ function handleChatMessages(chatMessages) {
     messageWrapper.appendChild(messageContainer);
     chatContainer.appendChild(messageWrapper);
   });
-
-  chatContainer.scrollTo({
-    top: chatContainer.scrollHeight,
-    behavior: 'smooth'
-  });
+  scrollToBottom()
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('message-form').addEventListener('submit', sendMessage);
-});
+let userScrolledToBottom = true;
+/**
+ * Stores if the user scrolled away from the bottom
+ * @param e scroll event
+ */
+function handleMessageScroll(e) {
+  const container = e.target;
+  const scrollPosition = container.scrollTop + container.clientHeight;
+  userScrolledToBottom = Math.abs(scrollPosition - container.scrollHeight) < 1;
+  console.log(`At bottom: ${userScrolledToBottom}`);
+}
+
+/**
+ * Scrolls the messages-container to the bottom if it was scrolled to the bottom before.
+ */
+function scrollToBottom() {
+  if (!userScrolledToBottom) {
+    return;
+  }
+
+  const chatContainer = document.getElementById('messages');
+  // delay scroll so DOM is rendered
+  setTimeout(() => {
+    chatContainer.parentElement.scrollTo({
+      top: chatContainer.scrollHeight,
+      behavior: 'smooth'
+    });
+  }, 100);
+}
 
 /**
  * Displays the list of users in the users div and highlights the current user.
@@ -140,5 +227,11 @@ function handleUsers(message) {
 
     usersDiv.appendChild(userDiv);
   });
-
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('message-form').addEventListener('submit', sendMessage);
+  // use keyup to prevent spam by holding down a key
+  document.getElementById('input-message').addEventListener('keyup', handleMessageInput);
+  document.getElementById('messages').parentElement.addEventListener('scroll', handleMessageScroll)
+});

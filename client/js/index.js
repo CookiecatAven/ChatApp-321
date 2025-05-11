@@ -52,6 +52,9 @@ socket.addEventListener('message', (event) => {
       case 'update-name-response':
         handleUpdateNameResponse(message);
         break
+      case 'typing-status':
+        handleTypingStatus(message);
+        break;
       case 'users':
         handleUsers(message)
         break

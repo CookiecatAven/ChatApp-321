@@ -10,6 +10,7 @@ interface Client {
     name: string;
     picture?: string;
   };
+  isTyping: boolean;
 }
 
 interface Message<T> {
@@ -57,6 +58,9 @@ const onMessage = async (ws: WebSocket, messageBuffer: RawData) => {
       break;
     case 'update-name':
       await handleUpdateUserName(ws, message.data);
+      break;
+    case 'typing-status':
+      handleTypingStatus(ws, message.data);
       break;
     case 'chat-message':
       await handleChatMessage(ws, message.data);
@@ -106,7 +110,8 @@ const handleGoogleAuth = async (ws: WebSocket, userToken: string) => {
       id: existingUser.id,
       name: existingUser.name,
       picture: existingUser.picture
-    }
+    },
+    isTyping: false
   });
 
   // Send success response
@@ -145,8 +150,10 @@ const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
     }));
     return;
   }
+  const isTyping = clients.get(ws)?.isTyping ?? false;
   clients.set(ws, {
-    user: updatedUser
+    user: updatedUser,
+    isTyping
   });
   ws.send(JSON.stringify({
     type: 'update-name-response',
@@ -161,9 +168,20 @@ const handleUpdateUserName = async (ws: WebSocket, newName: string) => {
   });
 };
 
+const handleTypingStatus = (ws: WebSocket, isTyping: boolean) => {
+  const client = clients.get(ws);
+  if (!client) {
+    // client is not in the list of authenticated clients
+    return;
+  }
+  client.isTyping = isTyping;
+  clients.set(ws, client);
+  sendCurrentTypingStatusToAll();
+};
+
 const handleChatMessage = async (ws: WebSocket, message: string) => {
   const client = clients.get(ws);
-  if (!client|| !client.user.id || !message) {
+  if (!client || !client.user.id || !message) {
     // client is not in the list of authenticated clients
     return;
   }
@@ -201,6 +219,20 @@ const sendCurrentUsersToAll = () => {
       .sort((a, b) => a.name.localeCompare(b.name))
   };
   sendToAll(usersMessage);
+};
+
+const sendCurrentTypingStatusToAll = () => {
+  const typingStatusMessage = {
+    type: 'typing-status',
+    data: Array.from(clients)
+      .map(([_, client]) => ({
+        id: client.user.id,
+        name: client.user.name,
+        isTyping: client.isTyping
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  };
+  sendToAll(typingStatusMessage);
 };
 
 /**
