@@ -48,13 +48,18 @@ function handleCredentialResponse(response) {
  * with specified settings in the designated HTML container.
  */
 function initializeGoogleSignIn() {
+  if (!window.google?.accounts?.id) {
+    console.warn('Google client library isn\'t loaded! Deferring initialization of Google Sign-In.');
+    setTimeout(initializeGoogleSignIn, 1000);
+    return;
+  }
   loadConfig().then(() => {
-    google.accounts.id.initialize({
+    window.google.accounts.id.initialize({
       client_id: config.GOOGLE_CLIENT_ID,
       callback: handleCredentialResponse
     });
 
-    google.accounts.id.renderButton(
+    window.google.accounts.id.renderButton(
       document.getElementById('sign-in-button-container'),
       {
         theme: 'outline',
