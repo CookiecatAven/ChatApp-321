@@ -44,8 +44,8 @@ function handleChatMessages(chatMessages) {
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const h = 260 + (Math.abs(hash) % 51); // Range from 260 to 310 (purple hues)
-    return `hsl(${h}, 70%, 90%)`;
+    const h = 250 + (Math.abs(hash) % 81); // Range from 250 to 330 (purple hues)
+    return `hsl(${h}, 70%, 85%)`;
   }
 
   function formatDateTime(timestamp) {
