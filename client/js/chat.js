@@ -18,6 +18,34 @@ function sendMessage(e) {
   return false;
 }
 
+let typingInterval = undefined;
+let hasBeenTyping = false;
+
+function handleMessageInput(e) {
+  const message = e.target.value;
+  if (message.length <= 0) {
+    clearInterval(typingInterval);
+    typingInterval = undefined;
+    console.log('stopped typing');
+    return;
+  }
+  if (typingInterval) {
+    hasBeenTyping = true;
+    return;
+  }
+  console.log('started typing');
+  typingInterval = setInterval(() => {
+    if (!hasBeenTyping) {
+      clearInterval(typingInterval);
+      typingInterval = undefined;
+      console.log('stopped typing');
+      return;
+    }
+    hasBeenTyping = false;
+    console.log('started typing');
+  }, 2500);
+}
+
 /**
  * Handles an incoming chat chatMessages by rendering it in the chat interface.
  *
@@ -100,10 +128,6 @@ function handleChatMessages(chatMessages) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('message-form').addEventListener('submit', sendMessage);
-});
-
 /**
  * Displays the list of users in the users div and highlights the current user.
  *
@@ -140,5 +164,10 @@ function handleUsers(message) {
 
     usersDiv.appendChild(userDiv);
   });
-
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('message-form').addEventListener('submit', sendMessage);
+  // use keyup to prevent spam by holding down a key
+  document.getElementById('input-message').addEventListener('keyup', handleMessageInput);
+});
