@@ -1,5 +1,7 @@
 # A simple chat app with websocket
 
+![](screenshot.jpg)
+
 ## Prerequisites
 
 - Docker
