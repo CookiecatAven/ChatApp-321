@@ -48,7 +48,7 @@ function handleMessageInput(e) {
     }
     hasBeenTyping = false;
     sendTypingStatus(true);
-  }, 2500);
+  }, 3000);
 }
 
 /**
