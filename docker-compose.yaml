@@ -1,9 +1,6 @@
 services:
   chat-app:
-    build:
-      context: .
-    profiles:
-      - with-frontend
+    image: jennyaven/m321-chat-app:1.0.1
     environment:
       DB_HOST: mariadb
       DB_NAME: mychat
@@ -19,26 +16,12 @@ services:
     image: mariadb:lts-ubi
     volumes:
       - m321_project_mariadb:/var/lib/mysql
-    restart: unless-stopped
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=supersecret123
       - MYSQL_DATABASE=mychat
       - MYSQL_USER=mychat
       - MYSQL_PASSWORD=mychatpassword
-    ports:
-      - "3306:3306"
-
-  phpmyadmin:
-    image: phpmyadmin
-    depends_on:
-      - mariadb
-    restart: unless-stopped
-    environment:
-      - PMA_HOST=mariadb
-      - PMA_PORT=3306
-      - MYSQL_ROOT_PASSWORD=supersecret123
-    ports:
-      - "9200:80"
 
 volumes:
   m321_project_mariadb:
