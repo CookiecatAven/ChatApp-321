@@ -226,9 +226,11 @@ const sendCurrentTypingStatusToAll = () => {
     type: 'typing-status',
     data: Array.from(clients)
       .map(([_, client]) => ({
+        id: client.user.id,
         name: client.user.name,
         isTyping: client.isTyping
       }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   };
   sendToAll(typingStatusMessage);
 };
