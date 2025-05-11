@@ -157,14 +157,37 @@ function handleChatMessages(chatMessages) {
     messageWrapper.appendChild(messageContainer);
     chatContainer.appendChild(messageWrapper);
   });
+  scrollToBottom()
+}
 
+let userScrolledToBottom = true;
+/**
+ * Stores if the user scrolled away from the bottom
+ * @param e scroll event
+ */
+function handleMessageScroll(e) {
+  const container = e.target;
+  const scrollPosition = container.scrollTop + container.clientHeight;
+  userScrolledToBottom = Math.abs(scrollPosition - container.scrollHeight) < 1;
+  console.log(`At bottom: ${userScrolledToBottom}`);
+}
+
+/**
+ * Scrolls the messages-container to the bottom if it was scrolled to the bottom before.
+ */
+function scrollToBottom() {
+  if (!userScrolledToBottom) {
+    return;
+  }
+
+  const chatContainer = document.getElementById('messages');
   // delay scroll so DOM is rendered
   setTimeout(() => {
-    chatContainer.parentNode.scrollTo({
+    chatContainer.parentElement.scrollTo({
       top: chatContainer.scrollHeight,
       behavior: 'smooth'
     });
-  }, 100)
+  }, 100);
 }
 
 /**
@@ -209,4 +232,5 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('message-form').addEventListener('submit', sendMessage);
   // use keyup to prevent spam by holding down a key
   document.getElementById('input-message').addEventListener('keyup', handleMessageInput);
+  document.getElementById('messages').parentElement.addEventListener('scroll', handleMessageScroll)
 });
