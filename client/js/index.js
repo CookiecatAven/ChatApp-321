@@ -52,6 +52,10 @@ socket.addEventListener('message', (event) => {
       case 'update-name-response':
         handleUpdateNameResponse(message);
         break
+      case 'typing-status':
+        // todo handle typing users
+        console.log(`users typing: ${message.data.filter(user => user.isTyping).map(user => user.name).join(', ')}`);
+        break;
       case 'users':
         handleUsers(message)
         break
