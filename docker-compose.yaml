@@ -6,7 +6,7 @@ services:
       DB_NAME: mychat
       DB_USER: mychat
       DP_PASSWORD: mychatpassword
-      NODE_ENV: production
+      NODE_ENV: development
       HOST: "localhost:3000"
       GOOGLE_CLIENT_ID: "531851416947-lsarlt9ovcaeph4rvamu3hj1ur67m0u5.apps.googleusercontent.com"
     ports:
